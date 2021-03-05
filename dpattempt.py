@@ -159,7 +159,7 @@ for fn in filenames:
 
     predictions = x["scene_transition_boundary_prediction"].float()
     D = torch.cat([x["place"], x["cast"], x["action"], x["audio"]], dim=1)
-    C = findSuperShots(Variable(torch.ones((D.shape[0], 1)), requires_grad=True), D, predictions, threshold=0.9)
+    # C = findSuperShots(Variable(torch.ones((D.shape[0], 1)), requires_grad=True), D, predictions, threshold=0.9)
     # embed()
     # raise Exception
 
