@@ -156,8 +156,6 @@ else:
         out, (hn, cn) = loaded_model(inp, (h0, c0))
         out = torch.sigmoid(out).reshape(ground.shape)
         pr_dict[f["imdb_id"]] = out.detach().cpu().numpy()
-        # embed()
-        # raise Exception
 
         # pr_dict[x["imdb_id"]] = x["scene_transition_boundary_prediction"]
 

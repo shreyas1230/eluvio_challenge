@@ -91,11 +91,11 @@ def dp_sol(shots, initial_preds):
     predictions = initial_preds
     for it in range(num_iterations):
         print("Iteration: {}".format(it))
-        C, pred_bounds = findSuperShots(W, shots, predictions, threshold=0.7)
-        print(len(C))
+        C, pred_bounds = findSuperShots(W, shots, predictions, threshold=0.9)
+        print("Num supershots: {}".format(len(C)))
         G_mat = get_g_mat(C)
-        print(G_mat)
-        F = torch.zeros((C.shape[0], C.shape[0]-1, 2))
+        # print(G_mat)
+        F = torch.zeros((C.shape[0], C.shape[0]-1, 2)) # first dim is total num supershots; second dim is num scenes; third dim is cut score and prior cut that achieved the score
         F[:, 0, 0] = G_mat[:,0]
 
         for j in range(1, F.shape[1]):
@@ -108,37 +108,21 @@ def dp_sol(shots, initial_preds):
         for k in range(ind, -1, -1):
             lst_idxs = [int(F[lst_idxs[0], k, 1].long().detach().item())] + lst_idxs
         lst_idxs = torch.unique(torch.Tensor(lst_idxs), sorted=True)
-        # print(len(lst_idxs))
 
-        # embed()
-        # raise Exception
 
         pred_idxs = []
         prev = -1
 
-        # for i in lst_idxs:
-        #     if i != prev and i < len(pred_bounds):
-        #         pred_idxs.append(int(i))
         new_pred_idxs = np.array(pred_bounds)[lst_idxs.long().tolist()]
 
         predictions = np.zeros(len(predictions))
-        # new_preds = np.array(predictions)
         predictions[new_pred_idxs] = 1
 
-        X = W.detach().clone()
         value = torch.max(F[-1,:,0])
         value.backward()
-        # print(torch.sum(W.grad.data)/W.grad.shape[0])
-        # raise Exception
         W.data = W.data - 10 * W.grad.data
         W.grad.data.zero_()
-        # print("Amount changed: {}".format(torch.sum((X-W)**2)))
-        # raise Exception
 
-    # value = F[F.shape[0]-1, F.shape[1]-1, 0]
-    # value.backward()
-    # W.data = W.data - 0.005 * W.grad.data
-    # W.grad.data.zero_()
     initial_preds[predictions==1] = 1
     new_preds = initial_preds
     return new_preds
@@ -159,13 +143,9 @@ for fn in filenames:
 
     predictions = x["scene_transition_boundary_prediction"].float()
     D = torch.cat([x["place"], x["cast"], x["action"], x["audio"]], dim=1)
-    # C = findSuperShots(Variable(torch.ones((D.shape[0], 1)), requires_grad=True), D, predictions, threshold=0.9)
-    # embed()
-    # raise Exception
 
     final_preds = dp_sol(D, predictions)
     pr_dict[x["imdb_id"]] = torch.Tensor(final_preds)
-    # break
 
 
 scores = dict()
